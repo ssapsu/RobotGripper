@@ -24,7 +24,8 @@ public:
 
 private:
     double speed;
-    double closurePercentage;
+    double currentClosurePercentage;
+    double targetClosurePercentage;
     bool gpioInitialized;
     void moveToPosition(double targetPercentage);
 };

@@ -14,6 +14,6 @@ constexpr double MIN_CLOSURE_PERCENTAGE = 0.0; // 0%
 constexpr double MAX_CLOSURE_PERCENTAGE = 100.0; // 100%
 constexpr int SERVO_PIN = 33; //
 constexpr double SERVO_PWM_FREQUENCY = 50; // 50 Hz
-constexpr double DELAY_BETWEEN_STEPS = 100000;
+constexpr double DELAY_BETWEEN_STEPS = 20000;
 
 #endif

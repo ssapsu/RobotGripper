@@ -13,7 +13,7 @@ void signalHandler(int signum) {
     exit(signum);
 }
 
-RobotGripper::RobotGripper(): speed(MIN_ANGULAR_SPEED), closurePercentage(MIN_CLOSURE_PERCENTAGE) {
+RobotGripper::RobotGripper(): speed(MIN_ANGULAR_SPEED), currentClosurePercentage(MIN_CLOSURE_PERCENTAGE) {
     signal(SIGINT, signalHandler);
     signal(SIGHUP, signalHandler);
     signal(SIGABRT, signalHandler);
@@ -59,11 +59,11 @@ void RobotGripper::setClosurePercentage(double percentage) {
     if (percentage < MIN_CLOSURE_PERCENTAGE || percentage > MAX_CLOSURE_PERCENTAGE) {
         throw std::out_of_range("Closure percentage must be between " + std::to_string(MIN_CLOSURE_PERCENTAGE) + " and " + std::to_string(MAX_CLOSURE_PERCENTAGE) + ".");
     }
-    closurePercentage = percentage;
+    targetClosurePercentage = percentage;
 }
 
 double RobotGripper::getClosurePercentage() const {
-    return closurePercentage;
+    return currentClosurePercentage;
 }
 
 void RobotGripper::openGripper() {
@@ -71,7 +71,7 @@ void RobotGripper::openGripper() {
 }
 
 void RobotGripper::closeGripper() {
-    moveToPosition(closurePercentage);
+    moveToPosition(targetClosurePercentage);
 }
 
 double RobotGripper::angleToDutyCycleRatio(double targetAngle) {
@@ -79,13 +79,28 @@ double RobotGripper::angleToDutyCycleRatio(double targetAngle) {
 }
 
 double RobotGripper::getAnglefromPercentage(double percentage) {
-    double x = percentage / 100 * (LINK_LENGTH + RADIUS - sqrt(pow(LINK_LENGTH, 2) - pow(RADIUS, 2))) + sqrt(pow(LINK_LENGTH, 2) - pow(RADIUS, 2));
-    double angle = acos((pow(x, 2) + pow(LINK_LENGTH, 2) - pow(RADIUS, 2)) / (2 * x * LINK_LENGTH));
-    return angle * 180.0 / PI;
+    double ratio = percentage / 100;
+    double xB0 = RADIUS + LINK_LENGTH;
+    double xB90 = sqrt(LINK_LENGTH * LINK_LENGTH - RADIUS * RADIUS);
+    double deltaXTotal = xB0 - xB90;
+    double A = xB0 - ratio * deltaXTotal;
+    double numerator = A * A - (LINK_LENGTH * LINK_LENGTH - RADIUS * RADIUS);
+    double denominator = 2 * RADIUS * LINK_LENGTH;
+    double cosTheta = numerator / denominator;
+
+    if (cosTheta > 1.0) {
+        cosTheta = 1.0;
+    } else if (cosTheta < -1.0) {
+        cosTheta = -1.0;
+    }
+    double angle = acos(cosTheta) * 180 / PI;
+    printf("Percentage: %f\n", percentage);
+    printf("Angle: %f\n", angle);
+    return angle;
 }
 
 void RobotGripper::moveToPosition(double targetPercentage) {
-    double currentAngle = getAnglefromPercentage(closurePercentage);
+    double currentAngle = getAnglefromPercentage(currentClosurePercentage);
     double targetAngle = getAnglefromPercentage(targetPercentage);
     double currentDutyCycle = angleToDutyCycleRatio(currentAngle);
     double targetDutyCycle = angleToDutyCycleRatio(targetAngle);
@@ -96,5 +111,5 @@ void RobotGripper::moveToPosition(double targetPercentage) {
         usleep(DELAY_BETWEEN_STEPS);
     }
 
-    closurePercentage = targetPercentage;
+    currentClosurePercentage = targetPercentage;
 }
