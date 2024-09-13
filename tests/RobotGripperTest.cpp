@@ -47,12 +47,12 @@ TEST(RobotGripperTest, SetValidClosurePercentage) {
 TEST(RobotGripperTest, AngleToDutyCycleRatio) {
     RobotGripper gripper;
 
-    EXPECT_NEAR(gripper.angleToDutyCycleRatio(0.0), 2.5, EPSILON);
-    EXPECT_NEAR(gripper.angleToDutyCycleRatio(90.0), 7.5, EPSILON);
-    EXPECT_NEAR(gripper.angleToDutyCycleRatio(180.0), 12.5, EPSILON);
+    EXPECT_NEAR(gripper.angleToDutyCycleRatio(0), 6.4, EPSILON);
+    EXPECT_NEAR(gripper.angleToDutyCycleRatio(90.0), 19.2, EPSILON);
+    EXPECT_NEAR(gripper.angleToDutyCycleRatio(180.0), 32, EPSILON);
 
     double angle = 90.0;
-    double expectedDutyCycle = 2.5 + (angle / 180.0) * 10.0;
+    double expectedDutyCycle = (2.5 + (angle / 180.0) * 10.0) / 100 * 256;
     EXPECT_NEAR(gripper.angleToDutyCycleRatio(angle), expectedDutyCycle, EPSILON);
 }
 

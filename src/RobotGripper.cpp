@@ -2,8 +2,46 @@
 #include "RobotGripper.h"
 #include <cmath>
 #include <iostream>
+#include <stdexcept>
+#include <jetgpio.h>
+#include <unistd.h>
+#include <signal.h>
+
+void signalHandler(int signum) {
+    gpioTerminate();
+    std::cout << "Interrupt signal (" << signal << ") received. Exiting...\n";
+    exit(signum);
+}
 
 RobotGripper::RobotGripper(): speed(MIN_ANGULAR_SPEED), closurePercentage(MIN_CLOSURE_PERCENTAGE) {
+    signal(SIGINT, signalHandler);
+    signal(SIGHUP, signalHandler);
+    signal(SIGABRT, signalHandler);
+    signal(SIGILL, signalHandler);
+    signal(SIGSEGV, signalHandler);
+    signal(SIGTERM, signalHandler);
+
+    int initResult = gpioInitialise();
+    if (initResult < 0) {
+        throw std::runtime_error("JETGPIO initialisation failed with error code: " + std::to_string(initResult));
+    } else {
+        std::cout << "JETGPIO initialised successfully.\n";
+        gpioInitialized = true;
+    }
+
+    int pwmFreqResult = gpioSetPWMfrequency(SERVO_PIN, SERVO_PWM_FREQUENCY);
+    if (pwmFreqResult < 0) {
+        gpioTerminate();
+        throw std::runtime_error("Failed to set PWM frequency with error code: " + std::to_string(pwmFreqResult));
+    }
+};
+
+RobotGripper::~RobotGripper() {
+    if (gpioInitialized) {
+        gpioPWM(SERVO_PIN, 0);
+        gpioTerminate();
+        std::cout << "JETGPIO terminated.\n";
+    }
 }
 
 void RobotGripper::setSpeed(double speed) {
@@ -37,7 +75,7 @@ void RobotGripper::closeGripper() {
 }
 
 double RobotGripper::angleToDutyCycleRatio(double targetAngle) {
-    return 2.5 + (targetAngle / 180.0) * 10.0;
+    return (2.5 + (targetAngle / 180.0) * 10.0) / 100 * 256;
 }
 
 double RobotGripper::getAnglefromPercentage(double percentage) {
@@ -51,9 +89,12 @@ void RobotGripper::moveToPosition(double targetPercentage) {
     double targetAngle = getAnglefromPercentage(targetPercentage);
     double currentDutyCycle = angleToDutyCycleRatio(currentAngle);
     double targetDutyCycle = angleToDutyCycleRatio(targetAngle);
-    double dutyCycleStep = (targetDutyCycle - currentDutyCycle) / 100.0;
-    for (int i = 0; i < 100; i++) {
+    double dutyCycleStep = (targetDutyCycle - currentDutyCycle) / 10.0;
+    for (int i = 0; i < 10; i++) {
         currentDutyCycle += dutyCycleStep;
-        std::cout << "Moving to position: " << currentDutyCycle << std::endl;
+        gpioPWM(SERVO_PIN, currentDutyCycle);
+        usleep(DELAY_BETWEEN_STEPS);
     }
+
+    closurePercentage = targetPercentage;
 }

@@ -8,6 +8,7 @@
 class RobotGripper {
 public:
     RobotGripper();
+    ~RobotGripper();
 
     void setSpeed(double speed);
     double getSpeed() const;
@@ -24,7 +25,7 @@ public:
 private:
     double speed;
     double closurePercentage;
-
+    bool gpioInitialized;
     void moveToPosition(double targetPercentage);
 };
 
