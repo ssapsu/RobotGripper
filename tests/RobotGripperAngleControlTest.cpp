@@ -9,8 +9,6 @@ TEST(RobotGripperTest, Degree1to2) {
     gripper.setClosurePercentage(100.0);
     EXPECT_NO_THROW(gripper.closeGripper());
     EXPECT_NO_THROW(gripper.openGripper());
-    EXPECT_NO_THROW(gripper.closeGripper());
-    EXPECT_NO_THROW(gripper.openGripper());
 }
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);

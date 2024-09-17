@@ -13,7 +13,7 @@ void signalHandler(int signum) {
     exit(signum);
 }
 
-RobotGripper::RobotGripper(): speed(MIN_ANGULAR_SPEED), currentClosurePercentage(MIN_CLOSURE_PERCENTAGE) {
+RobotGripper::RobotGripper(): speed(MIN_SPEED), currentClosurePercentage(MIN_CLOSURE_PERCENTAGE) {
     signal(SIGINT, signalHandler);
     signal(SIGHUP, signalHandler);
     signal(SIGABRT, signalHandler);
@@ -45,8 +45,8 @@ RobotGripper::~RobotGripper() {
 }
 
 void RobotGripper::setSpeed(double speed) {
-    if (speed < MIN_ANGULAR_SPEED || speed > MAX_ANGULAR_SPEED) {
-        throw std::out_of_range("Speed must be between " + std::to_string(MIN_ANGULAR_SPEED) + " and " + std::to_string(MAX_ANGULAR_SPEED) + " mm/s.");
+    if (speed < MIN_SPEED || speed > MAX_SPEED) {
+        throw std::out_of_range("Speed must be between " + std::to_string(MIN_SPEED) + " and " + std::to_string(MAX_SPEED) + " mm/s.");
     }
     this->speed = speed;
 }

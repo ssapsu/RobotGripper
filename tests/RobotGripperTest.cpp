@@ -35,12 +35,15 @@ TEST(RobotGripperTest, SetValidClosurePercentage) {
     RobotGripper gripper;
 
     gripper.setClosurePercentage(MIN_CLOSURE_PERCENTAGE);
+    gripper.closeGripper();
     EXPECT_NEAR(gripper.getClosurePercentage(), MIN_CLOSURE_PERCENTAGE, EPSILON);
 
     gripper.setClosurePercentage(MAX_CLOSURE_PERCENTAGE);
+    gripper.closeGripper();
     EXPECT_NEAR(gripper.getClosurePercentage(), MAX_CLOSURE_PERCENTAGE, EPSILON);
 
     gripper.setClosurePercentage(50.0);
+    gripper.closeGripper();
     EXPECT_NEAR(gripper.getClosurePercentage(), 50.0, EPSILON);
 }
 
