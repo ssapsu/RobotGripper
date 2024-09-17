@@ -6,14 +6,15 @@
 #include <jetgpio.h>
 #include <unistd.h>
 #include <signal.h>
+#include <algorithm> // For std::max and std::clamp
 
 void signalHandler(int signum) {
     gpioTerminate();
-    std::cout << "Interrupt signal (" << signal << ") received. Exiting...\n";
+    std::cout << "Interrupt signal (" << signum << ") received. Exiting...\n";
     exit(signum);
 }
 
-RobotGripper::RobotGripper(): speed(MIN_SPEED), currentClosurePercentage(MIN_CLOSURE_PERCENTAGE) {
+RobotGripper::RobotGripper() : speed(MIN_SPEED), currentClosurePercentage(MIN_CLOSURE_PERCENTAGE) {
     signal(SIGINT, signalHandler);
     signal(SIGHUP, signalHandler);
     signal(SIGABRT, signalHandler);
@@ -34,7 +35,7 @@ RobotGripper::RobotGripper(): speed(MIN_SPEED), currentClosurePercentage(MIN_CLO
         gpioTerminate();
         throw std::runtime_error("Failed to set PWM frequency with error code: " + std::to_string(pwmFreqResult));
     }
-};
+}
 
 RobotGripper::~RobotGripper() {
     if (gpioInitialized) {
@@ -100,16 +101,76 @@ double RobotGripper::getAnglefromPercentage(double percentage) {
 }
 
 void RobotGripper::moveToPosition(double targetPercentage) {
-    double currentAngle = getAnglefromPercentage(currentClosurePercentage);
-    double targetAngle = getAnglefromPercentage(targetPercentage);
-    double currentDutyCycle = angleToDutyCycleRatio(currentAngle);
-    double targetDutyCycle = angleToDutyCycleRatio(targetAngle);
-    double dutyCycleStep = (targetDutyCycle - currentDutyCycle) / 10.0;
-    for (int i = 0; i < 10; i++) {
-        currentDutyCycle += dutyCycleStep;
-        gpioPWM(SERVO_PIN, currentDutyCycle);
-        usleep(DELAY_BETWEEN_STEPS);
+    // Validate target percentage
+    if (targetPercentage < MIN_CLOSURE_PERCENTAGE || targetPercentage > MAX_CLOSURE_PERCENTAGE) {
+        throw std::out_of_range("Target percentage out of range.");
     }
 
+    // Convert percentages to angles
+    double currentAngle = getAnglefromPercentage(currentClosurePercentage);
+    double targetAngle = getAnglefromPercentage(targetPercentage);
+
+    // Convert angles to duty cycles
+    double currentDutyCycle = angleToDutyCycleRatio(currentAngle);
+    double targetDutyCycle = angleToDutyCycleRatio(targetAngle);
+
+    // Calculate the difference and direction
+    double dutyCycleDifference = targetDutyCycle - currentDutyCycle;
+    int direction = (dutyCycleDifference > 0) ? 1 : -1;
+    dutyCycleDifference = std::abs(dutyCycleDifference);
+
+    // Determine step size and number of steps based on speed
+    const double DUTY_CYCLE_STEP_SIZE = 1.0; // Adjust as needed for smoothness
+    int steps = static_cast<int>(std::ceil(dutyCycleDifference / DUTY_CYCLE_STEP_SIZE));
+    steps = std::max(steps, 1); // Ensure at least one step
+
+    // Calculate delay between steps to achieve desired speed
+    // Prevent division by zero
+    if (speed <= 0.0) {
+        throw std::runtime_error("Speed must be greater than zero.");
+    }
+
+    double totalMovementTime = dutyCycleDifference / speed; // seconds
+    useconds_t delayBetweenSteps = static_cast<useconds_t>((totalMovementTime / steps) * 1e6); // microseconds
+
+    // Debug Output
+    std::cout << "Moving to position: " << targetPercentage << "%" << std::endl;
+    std::cout << "Current Duty Cycle: " << currentDutyCycle << std::endl;
+    std::cout << "Target Duty Cycle: " << targetDutyCycle << std::endl;
+    std::cout << "Duty Cycle Difference: " << dutyCycleDifference << std::endl;
+    std::cout << "Number of Steps: " << steps << std::endl;
+    std::cout << "Total Movement Time: " << totalMovementTime << " seconds" << std::endl;
+    std::cout << "Delay Between Steps: " << delayBetweenSteps << " microseconds" << std::endl;
+
+    // Step through the duty cycle changes
+    for (int i = 0; i < steps; ++i) {
+        currentDutyCycle += direction * DUTY_CYCLE_STEP_SIZE;
+
+        // Clamp duty cycle to valid range (assuming 0-255 for PWM)
+        currentDutyCycle = std::clamp(currentDutyCycle, 0.0, 255.0);
+
+        // Set PWM and handle potential errors
+        int pwmResult = gpioPWM(SERVO_PIN, static_cast<int>(currentDutyCycle));
+        if (pwmResult < 0) {
+            throw std::runtime_error("Failed to set PWM during movement.");
+        }
+
+        // Debug Output for each step
+        std::cout << "Step " << (i + 1) << "/" << steps << ": Duty Cycle = " << currentDutyCycle << std::endl;
+
+        // Delay to control movement speed
+        usleep(delayBetweenSteps);
+    }
+
+    // Ensure final position is set accurately
+    int finalPwmResult = gpioPWM(SERVO_PIN, static_cast<int>(targetDutyCycle));
+    if (finalPwmResult < 0) {
+        throw std::runtime_error("Failed to set final PWM position.");
+    }
+
+    // Update the current closure percentage
     currentClosurePercentage = targetPercentage;
+
+    // Debug Output
+    std::cout << "Reached target position: " << targetPercentage << "%" << std::endl;
 }

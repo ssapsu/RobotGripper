@@ -6,20 +6,20 @@ constexpr double EPSILON = 0.0001;
 
 TEST(RobotGripperTest, DefaultConstructor) {
     RobotGripper gripper;
-    EXPECT_NEAR(gripper.getSpeed(), MIN_ANGULAR_SPEED, EPSILON);
+    EXPECT_NEAR(gripper.getSpeed(), MIN_SPEED, EPSILON);
     EXPECT_NEAR(gripper.getClosurePercentage(), MIN_CLOSURE_PERCENTAGE, EPSILON);
 }
 
 TEST(RobotGripperTest, SetValidSpeed) {
     RobotGripper gripper;
 
-    gripper.setSpeed(MIN_ANGULAR_SPEED);
-    EXPECT_NEAR(gripper.getSpeed(), MIN_ANGULAR_SPEED, EPSILON);
+    gripper.setSpeed(MIN_SPEED);
+    EXPECT_NEAR(gripper.getSpeed(), MIN_SPEED, EPSILON);
 
-    gripper.setSpeed(MAX_ANGULAR_SPEED);
-    EXPECT_NEAR(gripper.getSpeed(), MAX_ANGULAR_SPEED, EPSILON);
+    gripper.setSpeed(MAX_SPEED);
+    EXPECT_NEAR(gripper.getSpeed(), MAX_SPEED, EPSILON);
 
-    double midSpeed = (MIN_ANGULAR_SPEED + MAX_ANGULAR_SPEED) / 2;
+    double midSpeed = (MIN_SPEED + MAX_SPEED) / 2;
     gripper.setSpeed(midSpeed);
     EXPECT_NEAR(gripper.getSpeed(), midSpeed, EPSILON);
 }
@@ -27,8 +27,8 @@ TEST(RobotGripperTest, SetValidSpeed) {
 TEST(RobotGripperTeset, SetInvalidSpeed) {
     RobotGripper gripper;
 
-    EXPECT_THROW(gripper.setSpeed(MIN_ANGULAR_SPEED - 1), std::out_of_range);
-    EXPECT_THROW(gripper.setSpeed(MAX_ANGULAR_SPEED + 1), std::out_of_range);
+    EXPECT_THROW(gripper.setSpeed(MIN_SPEED - 1), std::out_of_range);
+    EXPECT_THROW(gripper.setSpeed(MAX_SPEED + 1), std::out_of_range);
 }
 
 TEST(RobotGripperTest, SetValidClosurePercentage) {
