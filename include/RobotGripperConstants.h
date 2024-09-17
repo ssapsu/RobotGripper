@@ -8,8 +8,9 @@
 constexpr double LINK_LENGTH = 28.75;
 constexpr double PI = M_PI;
 constexpr double RADIUS = 12.7;
-const double MIN_SPEED = 1.0; // Minimum speed in mm/s
-const double MAX_SPEED = 100.0; // Maximum speed in mm/s
+const double MIN_SPEED = 1.0;       // Slow speed in mm/s
+const double MODERATE_SPEED = 50.0; // Moderate speed in mm/s
+const double MAX_SPEED = 100.0;     // Fast speed in mm/s
 constexpr double MIN_CLOSURE_PERCENTAGE = 0.0; // 0%
 constexpr double MAX_CLOSURE_PERCENTAGE = 100.0; // 100%
 constexpr int SERVO_PIN = 33; //
