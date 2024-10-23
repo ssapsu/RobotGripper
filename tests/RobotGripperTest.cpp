@@ -7,7 +7,7 @@ constexpr double EPSILON = 0.0001;
 TEST(RobotGripperTest, DefaultConstructor) {
     RobotGripper gripper;
     EXPECT_NEAR(gripper.getSpeed(), MIN_SPEED, EPSILON);
-    EXPECT_NEAR(gripper.getClosurePercentage(), MIN_CLOSURE_PERCENTAGE, EPSILON);
+    EXPECT_NEAR(gripper.getClosurePercentage(), MIN_OPEN_PERCENTAGE, EPSILON);
 }
 
 TEST(RobotGripperTest, SetValidSpeed) {
@@ -34,13 +34,13 @@ TEST(RobotGripperTeset, SetInvalidSpeed) {
 TEST(RobotGripperTest, SetValidClosurePercentage) {
     RobotGripper gripper;
 
-    gripper.setClosurePercentage(MIN_CLOSURE_PERCENTAGE);
+    gripper.setClosurePercentage(MIN_OPEN_PERCENTAGE);
     gripper.closeGripper();
-    EXPECT_NEAR(gripper.getClosurePercentage(), MIN_CLOSURE_PERCENTAGE, EPSILON);
+    EXPECT_NEAR(gripper.getClosurePercentage(), MIN_OPEN_PERCENTAGE, EPSILON);
 
-    gripper.setClosurePercentage(MAX_CLOSURE_PERCENTAGE);
+    gripper.setClosurePercentage(MAX_OPEN_PERCENTAGE);
     gripper.closeGripper();
-    EXPECT_NEAR(gripper.getClosurePercentage(), MAX_CLOSURE_PERCENTAGE, EPSILON);
+    EXPECT_NEAR(gripper.getClosurePercentage(), MAX_OPEN_PERCENTAGE, EPSILON);
 
     gripper.setClosurePercentage(50.0);
     gripper.closeGripper();

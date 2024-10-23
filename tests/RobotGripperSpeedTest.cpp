@@ -1,4 +1,5 @@
 #include "RobotGripper.h"
+#include "RobotGripperConstants.h"
 #include <gtest/gtest.h>
 #include <iostream>
 
@@ -36,9 +37,9 @@ INSTANTIATE_TEST_SUITE_P(
     SpeedTests,
     RobotGripperSpeedTest,
     ::testing::Values(
-        SpeedTestCase{2.0, "Slow"},      // Adjust based on your MIN_SPEED
-        SpeedTestCase{50.0, "Moderate"}, // Adjust based on your calibration
-        SpeedTestCase{100.0, "Fast"}     // Adjust based on your MAX_SPEED
+        SpeedTestCase{MIN_SPEED, "Slow"},      // Adjust based on your MIN_SPEED
+        SpeedTestCase{MODERATE_SPEED, "Moderate"}, // Adjust based on your calibration
+        SpeedTestCase{MAX_SPEED, "Fast"}     // Adjust based on your MAX_SPEED
     )
 );
 
